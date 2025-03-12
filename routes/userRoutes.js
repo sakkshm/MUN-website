@@ -1,17 +1,12 @@
 const { Router } = require("express");
-const zod = require("zod");
 const jwt = require("jsonwebtoken")
 const bcrypt = require("bcrypt");
-const User = require("../db/index")
+const {User, Register} = require("../db/index")
+const { userSchema, registerSchema } = require("../validation/index");
+const userMiddleware = require("../middleware/userMiddleware");
 
 const router = Router();
 require("dotenv").config();
-
-const userSchema = zod.object({
-    username: zod.string(),
-    phoneNumber: zod.string().length(10),
-    password: zod.string().min(8),
-})
 
 router.post("/signup", async (req, res) => {
 
@@ -116,6 +111,68 @@ router.post("/login", async (req, res) => {
             msg: "Interval server error",
         })
     }
+
+})
+
+router.post("/register", userMiddleware, async (req, res) => {
+
+    const registerObj = {
+        userId: req.body.id,
+        username: req.body.username,
+        phoneNumber: req.body.phoneNumber,
+        emailID: req.body.emailID,
+        college: req.body.college,
+        
+        preferences: req.body.preferences,
+    
+        previousMUNexperience: req.body.previousMUNexperience,
+        refference: req.body.refference
+    }
+
+
+    const validation = registerSchema.safeParse(registerObj);
+
+    if(validation.success){
+    //check if user exists
+    try{
+        var response = await Register.find({
+            phoneNumber: req.body.phoneNumber,
+            userId: req.body.id
+        })
+    }
+    catch(err){
+        res.status(500).json({
+            msg: "Interval server error"
+        })
+    }
+
+    if(response.length != 0){
+        res.status(401).json({
+            msg: "User already registered"
+        })
+    }
+    else{
+        //If user has not registered      
+        try{
+
+            const userRegister = await Register.create(registerObj);
+
+            res.status(200).json({
+                id: userRegister._id
+            })
+        }
+        catch(error){
+            res.status(500).json({
+                msg: "Interval server error"
+            })
+        }
+    }
+   }
+   else{
+    res.status(401).json({
+        msg: "Invalid credentials",
+    });
+   }
 
 })
 
