@@ -16,7 +16,25 @@
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <script>
 
+    async function registerPayment(data) {
+      if(data.status == "Done"){
+
+        const res = await fetch('http://localhost:3000/payments/register-payment', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(res)
+        });
+
+        const data = await response.json();
+      }
+    }
+
     async function handlePaymentResponse(res){
+
+      console.log(res);
+
       const response = await fetch('http://localhost:3000/payments/verify-payment', {
         method: 'POST',
         headers: {
@@ -27,7 +45,10 @@
 
       const data = await response.json();
 
+      //registerPayment(data);
+      
       console.log(data);
+
     }
           
 
@@ -36,25 +57,28 @@
       const amount = document.getElementById('amount').value;
 
       // Create order by calling the server endpoint
+      //Add username, phoneNumber and userID here
       const response = await fetch('http://localhost:3000/payments/create-order', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ amount, currency: 'INR', notes: { "test": "test" } })
+        body: JSON.stringify({ amount, currency: 'INR', notes: { "phoneNumber": "Add number here" } })
       });
 
       const order = await response.json();
 
       // Open Razorpay Checkout
+      //Edit this part
       const options = {
         key: 'rzp_test_3Dc9Z77ubydwmD', 
-        amount: order.amount, 
+        amount: "1000", 
         currency: 'INR',
         name: 'KIET Model United Nations',
         description: 'Delegate Fees',
-        order_id: order.id, 
+        order_id: "order_Q6EeVKBXSzUF1N", 
         handler: async function(response) {
+          console.log(response);
           handlePaymentResponse(response);
         },
         prefill: {

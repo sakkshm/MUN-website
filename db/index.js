@@ -17,7 +17,11 @@ const userSchema = mongoose.Schema({
     feesPaid: {
         type: Boolean,
         default: false
-    }
+    },
+    orderID: String,
+    paymentID: String,
+    status: String,
+    paidOn: String
 
 })
 
