@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Razorpay Payment</title>
+</head>
+<body>
+  <h1>Razorpay Payment Gateway Integration</h1>
+  <form id="payment-form">
+    <label for="amount">Amount:</label>
+    <input type="number" id="amount" name="amount" required>
+    <button type="button" onclick="payNow()">Pay Now</button>
+  </form>
+
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script>
+
+    async function handlePaymentResponse(res){
+      const response = await fetch('http://localhost:3000/payments/verify-payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(res)
+      });
+
+      const data = await response.json();
+
+      console.log(data);
+    }
+          
+
+
+    async function payNow() {
+      const amount = document.getElementById('amount').value;
+
+      // Create order by calling the server endpoint
+      const response = await fetch('http://localhost:3000/payments/create-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ amount, currency: 'INR', notes: { "test": "test" } })
+      });
+
+      const order = await response.json();
+
+      // Open Razorpay Checkout
+      const options = {
+        key: 'rzp_test_3Dc9Z77ubydwmD', 
+        amount: order.amount, 
+        currency: 'INR',
+        name: 'KIET Model United Nations',
+        description: 'Delegate Fees',
+        order_id: order.id, 
+        handler: async function(response) {
+          handlePaymentResponse(response);
+        },
+        prefill: {
+          name: 'Gaurav Kumar',
+          email: 'gaurav.kumar@example.com',
+          contact: '9999999999'
+        },
+        theme: {
+          color: '#F37254'
+        },
+      };
+
+      const rzp = new Razorpay(options);
+      rzp.open();
+
+      rzp.on('payment.failed', function (response){
+            console.log(response.error.code);
+            console.log(response.error.description);
+            console.log(response.error.source);
+            console.log(response.error.step);
+            console.log(response.error.reason);
+            console.log(response.error.metadata.order_id);
+            console.log(response.error.metadata.payment_id);
+      });
+    }
+  </script>
+</body>
+</html>
